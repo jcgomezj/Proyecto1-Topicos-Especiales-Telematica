@@ -7,7 +7,7 @@ Universidad EAFIT — 2026-1
 - **Camilo** 
 - **Santiago** 
 - **Posso**
-
+  
 ---
 
 ## Descripción
