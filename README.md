@@ -118,7 +118,7 @@ En una terminal separada (con el monolito corriendo):
 ngrok http 8000
 ```
 
-Compartir la URL generada (ej: `https://abc123.ngrok-free.app`) con los demás usuarios.
+Compartir la URL generada con los demás usuarios.
 
 ---
 
