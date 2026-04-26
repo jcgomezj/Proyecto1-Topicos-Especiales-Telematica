@@ -19,6 +19,9 @@ class MessageResponse(BaseModel):
     channel_id: Optional[int]
     receiver_id: Optional[int]
     created_at: datetime
+    file_url: Optional[str] = None
+    sender_name: Optional[str] = None
+
     class Config:
         from_attributes = True
 
@@ -33,5 +36,6 @@ class FileResponse(BaseModel):
     file_size: Optional[int]
     file_type: Optional[str]
     uploaded_at: datetime
+
     class Config:
         from_attributes = True

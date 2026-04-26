@@ -4,66 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GroupsApp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; height: 100vh; display: flex; flex-direction: column; }
-        .header { background: #16213e; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { color: #0f3460; color: #4a90d9; font-size: 1.4rem; }
-        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
-        .btn-primary { background: #4a90d9; color: white; }
-        .btn-danger { background: #e74c3c; color: white; }
-        .btn-success { background: #2ecc71; color: white; }
+        :root {
+            --bg: #0d1117; --sidebar: #161b22; --header: #161b22;
+            --card: #1c2128; --border: #30363d; --accent: #2f81f7;
+            --accent2: #3fb950; --text: #e6edf3; --muted: #7d8590;
+            --sent: #1f4d8c; --recv: #1c2128; --danger: #f85149;
+            --online: #3fb950; --offline: #7d8590;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .header { background: var(--header); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .header h1 { color: var(--accent); font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .user-badge { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; }
+        .presence-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--online); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        .btn { padding: 7px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: inherit; font-weight: 500; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.85; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-success { background: var(--accent2); color: white; }
+        .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
         .container { display: flex; flex: 1; overflow: hidden; }
-        .sidebar { width: 260px; background: #16213e; padding: 16px; overflow-y: auto; border-right: 1px solid #0f3460; }
-        .sidebar h3 { color: #4a90d9; margin-bottom: 12px; font-size: 0.9rem; text-transform: uppercase; }
-        .group-item { padding: 10px; border-radius: 8px; cursor: pointer; margin-bottom: 6px; background: #0f3460; transition: background 0.2s; }
-        .group-item:hover, .group-item.active { background: #4a90d9; }
+        .sidebar { width: 250px; background: var(--sidebar); display: flex; flex-direction: column; border-right: 1px solid var(--border); }
+        .sidebar-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h3 { font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+        .groups-list { flex: 1; overflow-y: auto; padding: 8px; }
+        .group-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 2px; transition: background 0.15s; display: flex; align-items: center; gap: 10px; }
+        .group-item:hover { background: var(--card); }
+        .group-item.active { background: rgba(47,129,247,0.15); border-left: 2px solid var(--accent); }
+        .group-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #7c3aed); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; flex-shrink: 0; }
+        .group-name { font-size: 0.9rem; font-weight: 500; }
         .chat { flex: 1; display: flex; flex-direction: column; }
-        .chat-header { padding: 16px 24px; background: #16213e; border-bottom: 1px solid #0f3460; }
-        .messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .message { max-width: 60%; padding: 10px 14px; border-radius: 12px; }
-        .message.sent { background: #4a90d9; align-self: flex-end; }
-        .message.received { background: #0f3460; align-self: flex-start; }
-        .message .meta { font-size: 0.75rem; opacity: 0.7; margin-top: 4px; }
-        .input-area { padding: 16px; background: #16213e; display: flex; gap: 8px; }
-        .input-area input { flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid #0f3460; background: #1a1a2e; color: #eee; font-size: 0.95rem; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+        .chat-header { padding: 14px 20px; background: var(--header); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+        .chat-header .group-avatar { width: 38px; height: 38px; }
+        .chat-header-info h3 { font-size: 0.95rem; font-weight: 600; }
+        .chat-header-info p { font-size: 0.78rem; color: var(--muted); }
+        .messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+        .messages::-webkit-scrollbar { width: 4px; }
+        .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        .msg-wrapper { display: flex; flex-direction: column; max-width: 65%; }
+        .msg-wrapper.sent { align-self: flex-end; align-items: flex-end; }
+        .msg-wrapper.received { align-self: flex-start; align-items: flex-start; }
+        .msg-sender { font-size: 0.72rem; color: var(--accent); font-weight: 600; margin-bottom: 3px; padding-left: 4px; }
+        .message { padding: 9px 13px; border-radius: 12px; word-break: break-word; font-size: 0.9rem; line-height: 1.45; }
+        .msg-wrapper.sent .message { background: var(--sent); border-bottom-right-radius: 3px; }
+        .msg-wrapper.received .message { background: var(--recv); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+        .msg-meta { display: flex; align-items: center; gap: 5px; margin-top: 3px; padding: 0 4px; }
+        .msg-time { font-size: 0.7rem; color: var(--muted); }
+        .msg-status { font-size: 0.7rem; }
+        .msg-status.delivered { color: var(--muted); }
+        .msg-status.read { color: var(--accent); }
+        .msg-image { max-width: 220px; border-radius: 8px; cursor: pointer; display: block; margin-bottom: 4px; }
+        .msg-file { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: rgba(255,255,255,0.05); border-radius: 8px; text-decoration: none; color: var(--text); font-size: 0.82rem; }
+        .msg-file:hover { background: rgba(255,255,255,0.1); }
+        .input-area { padding: 12px 16px; background: var(--header); border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: center; }
+        .input-area input[type=text] { flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 0.9rem; font-family: inherit; outline: none; transition: border-color 0.2s; }
+        .input-area input[type=text]:focus { border-color: var(--accent); }
+        .attach-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 1.3rem; padding: 6px; border-radius: 6px; transition: color 0.2s; }
+        .attach-btn:hover { color: var(--accent); }
+        #fileInput { display: none; }
+        .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); gap: 12px; }
+        .empty-state .icon { font-size: 3rem; opacity: 0.3; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px); }
         .modal.active { display: flex; }
-        .modal-box { background: #16213e; padding: 32px; border-radius: 12px; width: 360px; }
-        .modal-box h2 { color: #4a90d9; margin-bottom: 20px; }
+        .modal-box { background: var(--sidebar); padding: 28px; border-radius: 12px; width: 360px; border: 1px solid var(--border); }
+        .modal-box h2 { color: var(--accent); margin-bottom: 20px; font-size: 1.1rem; }
         .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; margin-bottom: 4px; font-size: 0.85rem; color: #aaa; }
-        .form-group input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #0f3460; background: #1a1a2e; color: #eee; }
-        .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-        .tab { padding: 8px 16px; border-radius: 6px; cursor: pointer; background: #0f3460; }
-        .tab.active { background: #4a90d9; }
-        .empty-state { flex: 1; display: flex; align-items: center; justify-content: center; color: #555; font-size: 1.1rem; }
-        #toast { position: fixed; bottom: 24px; right: 24px; background: #2ecc71; color: white; padding: 12px 20px; border-radius: 8px; display: none; z-index: 200; }
-        #toast.error { background: #e74c3c; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 0.82rem; color: var(--muted); font-weight: 500; }
+        .form-group input { width: 100%; padding: 9px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 0.9rem; font-family: inherit; outline: none; }
+        .form-group input:focus { border-color: var(--accent); }
+        .tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+        .tab { padding: 7px 16px; border-radius: 6px; cursor: pointer; background: var(--card); font-size: 0.85rem; font-weight: 500; transition: background 0.15s; border: 1px solid var(--border); }
+        .tab.active { background: var(--accent); border-color: var(--accent); color: white; }
+        .modal-actions { display: flex; gap: 8px; margin-top: 18px; }
+        .modal-actions .btn { flex: 1; }
+        #toast { position: fixed; bottom: 24px; right: 24px; background: var(--accent2); color: white; padding: 11px 18px; border-radius: 8px; display: none; z-index: 300; font-size: 0.87rem; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+        #toast.error { background: var(--danger); }
+        .online-users { padding: 10px 16px; border-top: 1px solid var(--border); }
+        .online-users h4 { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+        .online-user { display: flex; align-items: center; gap: 7px; padding: 4px 0; font-size: 0.82rem; }
+        .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        .dot.online { background: var(--online); }
+        .dot.offline { background: var(--offline); }
     </style>
 </head>
 <body>
-
 <div class="header">
     <h1>💬 GroupsApp</h1>
-    <div id="userInfo" style="display:flex;align-items:center;gap:12px;">
-        <span id="usernameDisplay"></span>
-        <button class="btn btn-danger" onclick="logout()" id="logoutBtn" style="display:none">Cerrar sesión</button>
+    <div class="user-info">
+        <div class="user-badge" id="userBadge" style="display:none">
+            <div class="presence-dot"></div>
+            <span id="usernameDisplay"></span>
+        </div>
+        <button class="btn btn-danger" id="logoutBtn" style="display:none" onclick="logout()">Cerrar sesión</button>
     </div>
 </div>
-
 <div class="container">
     <div class="sidebar">
-        <h3>Grupos</h3>
-        <button class="btn btn-primary" style="width:100%;margin-bottom:12px;" onclick="showCreateGroup()">+ Nuevo grupo</button>
-        <div id="groupsList"></div>
+        <div class="sidebar-header">
+            <h3>Grupos</h3>
+            <button class="btn btn-primary" onclick="showCreateGroup()" style="padding:5px 10px;font-size:0.8rem">+ Nuevo</button>
+        </div>
+        <div class="groups-list" id="groupsList"></div>
+        <div class="online-users" id="onlineUsers" style="display:none">
+            <h4>En línea</h4>
+            <div id="onlineList"></div>
+        </div>
     </div>
     <div class="chat" id="chatArea">
-        <div class="empty-state">Selecciona un grupo para chatear</div>
+        <div class="empty-state"><div class="icon">💬</div><p>Selecciona un grupo para chatear</p></div>
     </div>
 </div>
-
-<!-- Modal Auth -->
 <div class="modal active" id="authModal">
     <div class="modal-box">
         <h2>GroupsApp</h2>
@@ -73,39 +127,37 @@
         </div>
         <div id="loginForm">
             <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="tu@email.com"></div>
-            <div class="form-group"><label>Contraseña</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+            <div class="form-group"><label>Contraseña</label><input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()"></div>
             <button class="btn btn-primary" style="width:100%" onclick="login()">Entrar</button>
         </div>
         <div id="registerForm" style="display:none">
-            <div class="form-group"><label>Username</label><input type="text" id="regUsername" placeholder="camilo123"></div>
+            <div class="form-group"><label>Username</label><input type="text" id="regUsername" placeholder="tu_usuario"></div>
             <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="tu@email.com"></div>
             <div class="form-group"><label>Contraseña</label><input type="password" id="regPassword" placeholder="••••••••"></div>
-            <button class="btn btn-primary" style="width:100%" onclick="register()">Registrarse</button>
+            <button class="btn btn-success" style="width:100%" onclick="register()">Crear cuenta</button>
         </div>
     </div>
 </div>
-
-<!-- Modal Crear Grupo -->
 <div class="modal" id="createGroupModal">
     <div class="modal-box">
         <h2>Nuevo Grupo</h2>
-        <div class="form-group"><label>Nombre</label><input type="text" id="groupName" placeholder="Mi grupo"></div>
+        <div class="form-group"><label>Nombre</label><input type="text" id="groupName" placeholder="Nombre del grupo"></div>
         <div class="form-group"><label>Descripción</label><input type="text" id="groupDesc" placeholder="Descripción opcional"></div>
-        <div style="display:flex;gap:8px;margin-top:8px;">
-            <button class="btn btn-primary" style="flex:1" onclick="createGroup()">Crear</button>
-            <button class="btn btn-danger" style="flex:1" onclick="closeCreateGroup()">Cancelar</button>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeCreateGroup()">Cancelar</button>
+            <button class="btn btn-primary" onclick="createGroup()">Crear</button>
         </div>
     </div>
 </div>
-
 <div id="toast"></div>
-
+<input type="file" id="fileInput" accept="image/*,application/pdf,.doc,.docx,.txt" onchange="sendFile()">
 <script>
     const API = 'http://localhost:8000';
     let token = localStorage.getItem('token');
     let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
     let currentGroup = null;
     let refreshInterval = null;
+    let presenceInterval = null;
 
     function showToast(msg, error=false) {
         const t = document.getElementById('toast');
@@ -116,32 +168,29 @@
     }
 
     function switchTab(tab) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        event.target.classList.add('active');
+        document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (tab==='login'&&i===0)||(tab==='register'&&i===1)));
         document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
         document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
     }
 
     async function register() {
-        const username = document.getElementById('regUsername').value;
-        const email = document.getElementById('regEmail').value;
+        const username = document.getElementById('regUsername').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
         const password = document.getElementById('regPassword').value;
+        if (!username || !email || !password) { showToast('Completa todos los campos', true); return; }
         const res = await fetch(`${API}/auth/register`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({username, email, password})
         });
-        const data = await res.json();
         if (res.ok) { showToast('Registro exitoso. Inicia sesión.'); switchTab('login'); }
-        else showToast(data.detail || 'Error al registrarse', true);
+        else { const d = await res.json(); showToast(d.detail || 'Error al registrar', true); }
     }
 
     async function login() {
-        const email = document.getElementById('loginEmail').value;
+        const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
         const res = await fetch(`${API}/auth/login`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({email, password})
         });
         const data = await res.json();
@@ -153,22 +202,42 @@
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
             document.getElementById('authModal').classList.remove('active');
             document.getElementById('usernameDisplay').textContent = currentUser.username;
+            document.getElementById('userBadge').style.display = 'flex';
             document.getElementById('logoutBtn').style.display = 'block';
             loadGroups();
+            loadOnlineUsers();
+            presenceInterval = setInterval(loadOnlineUsers, 10000);
             showToast('Bienvenido ' + currentUser.username);
         } else showToast(data.detail || 'Credenciales invalidas', true);
     }
 
     function logout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('currentUser');
+        if (currentUser) fetch(`${API}/auth/logout?email=${currentUser.email}`, {method:'POST'});
+        localStorage.removeItem('token'); localStorage.removeItem('currentUser');
         token = null; currentUser = null; currentGroup = null;
-        clearInterval(refreshInterval);
+        clearInterval(refreshInterval); clearInterval(presenceInterval);
         document.getElementById('authModal').classList.add('active');
         document.getElementById('logoutBtn').style.display = 'none';
-        document.getElementById('usernameDisplay').textContent = '';
+        document.getElementById('userBadge').style.display = 'none';
         document.getElementById('groupsList').innerHTML = '';
-        document.getElementById('chatArea').innerHTML = '<div class="empty-state">Selecciona un grupo para chatear</div>';
+        document.getElementById('onlineUsers').style.display = 'none';
+        document.getElementById('chatArea').innerHTML = '<div class="empty-state"><div class="icon">💬</div><p>Selecciona un grupo para chatear</p></div>';
+    }
+
+    async function loadOnlineUsers() {
+        try {
+            const users = await (await fetch(`${API}/users/`)).json();
+            const container = document.getElementById('onlineList');
+            const section = document.getElementById('onlineUsers');
+            section.style.display = 'block';
+            container.innerHTML = '';
+            users.slice(0, 8).forEach(u => {
+                const div = document.createElement('div');
+                div.className = 'online-user';
+                div.innerHTML = `<div class="dot ${u.is_online ? 'online' : 'offline'}"></div><span>${u.username}</span>`;
+                container.appendChild(div);
+            });
+        } catch(e) {}
     }
 
     async function loadGroups() {
@@ -179,21 +248,25 @@
         groups.forEach(g => {
             const div = document.createElement('div');
             div.className = 'group-item' + (currentGroup?.id === g.id ? ' active' : '');
-            div.textContent = g.name;
-            div.onclick = () => openGroup(g);
+            div.innerHTML = `<div class="group-avatar">${g.name[0].toUpperCase()}</div><span class="group-name">${g.name}</span>`;
+            div.onclick = () => openGroup(g, div);
             list.appendChild(div);
         });
     }
 
-    function openGroup(group) {
+    function openGroup(group, el) {
         currentGroup = group;
         clearInterval(refreshInterval);
         document.querySelectorAll('.group-item').forEach(i => i.classList.remove('active'));
-        event.target.classList.add('active');
+        el.classList.add('active');
         document.getElementById('chatArea').innerHTML = `
-            <div class="chat-header"><strong>${group.name}</strong> — ${group.description || ''}</div>
+            <div class="chat-header">
+                <div class="group-avatar">${group.name[0].toUpperCase()}</div>
+                <div class="chat-header-info"><h3>${group.name}</h3><p>${group.description || 'Grupo de mensajería'}</p></div>
+            </div>
             <div class="messages" id="messages"></div>
             <div class="input-area">
+                <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="Adjuntar">📎</button>
                 <input type="text" id="msgInput" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter') sendMessage()">
                 <button class="btn btn-primary" onclick="sendMessage()">Enviar</button>
             </div>
@@ -202,65 +275,97 @@
         refreshInterval = setInterval(loadMessages, 3000);
     }
 
+    function formatStatus(status) {
+        if (status === 'read') return '<span class="msg-status read">✓✓</span>';
+        if (status === 'delivered') return '<span class="msg-status delivered">✓✓</span>';
+        return '<span class="msg-status" style="color:var(--muted)">✓</span>';
+    }
+
     async function loadMessages() {
         if (!currentGroup) return;
         const res = await fetch(`${API}/messages/group/${currentGroup.id}`);
         const msgs = await res.json();
         const container = document.getElementById('messages');
         if (!container) return;
+        const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 60;
         container.innerHTML = '';
         msgs.forEach(m => {
-            const div = document.createElement('div');
-            div.className = 'message ' + (m.sender_id === currentUser?.id ? 'sent' : 'received');
-            div.innerHTML = `<div>${m.content}</div><div class="meta">${new Date(m.created_at).toLocaleTimeString()}</div>`;
-            container.appendChild(div);
+            const isSent = m.sender_id === currentUser?.id;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'msg-wrapper ' + (isSent ? 'sent' : 'received');
+            let contentHTML = '';
+            if (m.message_type === 'image' && m.file_url) {
+                contentHTML = `<img src="${m.file_url}" class="msg-image" onclick="window.open('${m.file_url}','_blank')" alt="imagen">`;
+            } else if (m.message_type === 'file' && m.file_url) {
+                contentHTML = `<a href="${m.file_url}" target="_blank" class="msg-file"><span>📄</span><span>${m.content || m.file_url.split('/').pop()}</span></a>`;
+            } else {
+                contentHTML = `<div>${m.content}</div>`;
+            }
+            const time = new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            wrapper.innerHTML = `
+                ${!isSent ? `<div class="msg-sender">${m.sender_name || 'Usuario'}</div>` : ''}
+                <div class="message">${contentHTML}</div>
+                <div class="msg-meta">
+                    <span class="msg-time">${time}</span>
+                    ${isSent ? formatStatus(m.status) : ''}
+                </div>`;
+            container.appendChild(wrapper);
         });
-        container.scrollTop = container.scrollHeight;
+        if (atBottom) container.scrollTop = container.scrollHeight;
     }
 
     async function sendMessage() {
         const input = document.getElementById('msgInput');
         const content = input.value.trim();
         if (!content || !currentGroup || !currentUser) return;
+        input.value = '';
         await fetch(`${API}/messages/?sender_id=${currentUser.id}`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({content, message_type: 'text', group_id: currentGroup.id, channel_id: null, receiver_id: null})
         });
-        input.value = '';
         loadMessages();
+    }
+
+    async function sendFile() {
+        const file = document.getElementById('fileInput').files[0];
+        if (!file || !currentGroup || !currentUser) return;
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('sender_id', currentUser.id);
+        formData.append('group_id', currentGroup.id);
+        try {
+            const res = await fetch(`${API}/messages/upload`, {method:'POST', body: formData});
+            if (res.ok) { loadMessages(); showToast('Archivo enviado'); }
+            else showToast('Error al enviar archivo', true);
+        } catch(e) { showToast('Error al enviar archivo', true); }
+        document.getElementById('fileInput').value = '';
     }
 
     function showCreateGroup() {
         if (!currentUser) { showToast('Inicia sesión primero', true); return; }
         document.getElementById('createGroupModal').classList.add('active');
     }
-
-    function closeCreateGroup() {
-        document.getElementById('createGroupModal').classList.remove('active');
-    }
+    function closeCreateGroup() { document.getElementById('createGroupModal').classList.remove('active'); }
 
     async function createGroup() {
-        const name = document.getElementById('groupName').value;
-        const description = document.getElementById('groupDesc').value;
+        const name = document.getElementById('groupName').value.trim();
+        const description = document.getElementById('groupDesc').value.trim();
         if (!name) { showToast('El nombre es obligatorio', true); return; }
         const res = await fetch(`${API}/groups/?created_by=${currentUser.id}`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({name, description, group_type: 'public'})
         });
-        if (res.ok) {
-            closeCreateGroup();
-            loadGroups();
-            showToast('Grupo creado exitosamente');
-        } else showToast('Error al crear grupo', true);
+        if (res.ok) { closeCreateGroup(); loadGroups(); showToast('Grupo creado'); }
+        else showToast('Error al crear grupo', true);
     }
 
     if (token && currentUser) {
         document.getElementById('authModal').classList.remove('active');
         document.getElementById('usernameDisplay').textContent = currentUser.username;
+        document.getElementById('userBadge').style.display = 'flex';
         document.getElementById('logoutBtn').style.display = 'block';
-        loadGroups();
+        loadGroups(); loadOnlineUsers();
+        presenceInterval = setInterval(loadOnlineUsers, 10000);
     }
 </script>
 </body>

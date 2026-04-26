@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum
+from sqlalchemy.orm import relationship
 from datetime import datetime
 from monolith.models.user import Base
 
@@ -10,9 +11,11 @@ class Message(Base):
     channel_id = Column(Integer, ForeignKey("channels.id"), nullable=True)
     receiver_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     content = Column(String, nullable=True)
-    message_type = Column(Enum("text", "file", "image", name="message_type"), default="text")
-    status = Column(Enum("sent", "delivered", "read", name="message_status"), default="sent")
+    file_url = Column(String, nullable=True)
+    message_type = Column(Enum("text", "file", "image", name="message_type_enum"), default="text")
+    status = Column(Enum("sent", "delivered", "read", name="message_status_enum"), default="sent")
     created_at = Column(DateTime, default=datetime.utcnow)
+    sender = relationship("User", foreign_keys=[sender_id])
 
 class File(Base):
     __tablename__ = "files"
