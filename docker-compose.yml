@@ -26,6 +26,7 @@ services:
       context: ./auth_service
     ports:
       - "8001:8001"
+      - "50051:50051"
     environment:
       - DATABASE_URL=postgresql://postgres:password@db:5432/groupsapp
       - SECRET_KEY=supersecretkey123
@@ -61,8 +62,11 @@ services:
       - "8004:8004"
     environment:
       - DATABASE_URL=postgresql://postgres:password@db:5432/groupsapp
+      - AUTH_GRPC_HOST=auth_service
+      - AUTH_GRPC_PORT=50051
     depends_on:
       - db
+      - auth_service
 
 volumes:
   postgres_data:
