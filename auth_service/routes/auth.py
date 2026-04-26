@@ -6,6 +6,7 @@ from core.security import verify_password, get_password_hash, create_access_toke
 from models.user import User
 from schemas.user import UserCreate, UserLogin, UserResponse, Token
 from core.config import settings
+from kafka_producer import publish_presence_event
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -29,6 +30,7 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
     user.is_online = True
     db.commit()
     access_token = create_access_token(data={"sub": user.email}, expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    publish_presence_event(user.email, "online")
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/logout")
@@ -37,4 +39,5 @@ def logout(email: str, db: Session = Depends(get_db)):
     if user:
         user.is_online = False
         db.commit()
+    publish_presence_event(email, "offline")
     return {"message": "Sesion cerrada exitosamente"}

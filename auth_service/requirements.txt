@@ -13,3 +13,4 @@ setuptools
 grpcio==1.62.0
 grpcio-tools==1.62.0
 protobuf==4.25.9
+kafka-python
