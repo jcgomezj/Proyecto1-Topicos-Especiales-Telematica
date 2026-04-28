@@ -7,7 +7,7 @@ services:
     routes:
       - name: monolith-route
         paths:
-          - /monolith
+          - /monolith/
         strip_path: false
 
   - name: auth-service
@@ -15,7 +15,7 @@ services:
     routes:
       - name: auth-route
         paths:
-          - /auth
+          - /auth/
         strip_path: false
 
   - name: user-service
@@ -23,7 +23,7 @@ services:
     routes:
       - name: user-route
         paths:
-          - /users
+          - /users/
         strip_path: false
 
   - name: group-service
@@ -31,7 +31,7 @@ services:
     routes:
       - name: group-route
         paths:
-          - /groups
+          - /groups/
         strip_path: false
 
   - name: messaging-service
@@ -39,7 +39,7 @@ services:
     routes:
       - name: messaging-route
         paths:
-          - /messages
+          - /messages/
         strip_path: false
 
   - name: file-service
@@ -47,5 +47,5 @@ services:
     routes:
       - name: file-route
         paths:
-          - /files
+          - /files/
         strip_path: false
