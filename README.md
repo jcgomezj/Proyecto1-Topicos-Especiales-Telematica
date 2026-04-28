@@ -39,7 +39,7 @@ GroupsApp es una aplicación de mensajería instantánea similar a WhatsApp/Tele
 
 ---
 
-## Arquitectura
+## Arquitectura Original
 
 ```
 Cliente (Browser)
@@ -47,6 +47,97 @@ Cliente (Browser)
 API REST (FastAPI) — puerto 8000
       ↓
 PostgreSQL — puerto 5432
+```
+
+## Arquitectura con Microservicios y API Gateway
+
+```
+                    ┌─────────────┐
+                    │    Kong     │  Puerto 80
+                    │ API Gateway │
+                    └──────┬──────┘
+                           │
+        ┌──────────────────┼──────────────────┐
+        │                  │                  │
+   ┌────▼────┐      ┌──────▼──────┐    ┌─────▼─────┐
+   │  Auth   │      │    User     │    │   File    │
+   │ Service │      │   Service   │    │  Service  │
+   └─────────┘      └─────────────┘    └───────────┘
+                                              │
+                                         ┌─────▼─────┐
+                                         │   MinIO   │
+                                         │  (S3)     │
+                                         └───────────┘
+```
+
+### Servicios y Rutas
+
+| Servicio | Puerto Directo | Ruta Kong |
+|----------|---------------|-----------|
+| Kong Gateway | 80 | - |
+| Monolith | 8000 | /monolith |
+| Auth Service | 8001 | /auth |
+| User Service | 8002 | /users |
+| Group Service | 8003 | /groups |
+| Messaging Service | 8004 | /messages |
+| File Service | 8005 | /files |
+| MinIO S3 | 9000 | - |
+| MinIO Console | 9001 | - |
+
+### Ejecución con Docker Compose
+
+```bash
+# Construir y levantar todos los servicios
+docker compose up --build -d
+
+# Ver logs
+docker compose logs -f
+
+# Detener servicios
+docker compose down
+```
+
+### Endpoints después de Kong
+
+- **Auth**: `http://localhost/auth/*`
+- **Users**: `http://localhost/users/*`
+- **Groups**: `http://localhost/groups/*`
+- **Messages**: `http://localhost/messages/*`
+- **Files**: `http://localhost/files/*`
+
+### Endpoints directos (sin Kong)
+
+- **Auth Service**: http://localhost:8001
+- **User Service**: http://localhost:8002
+- **Group Service**: http://localhost:8003
+- **Messaging Service**: http://localhost:8004
+- **File Service**: http://localhost:8005
+- **MinIO Console**: http://localhost:9001 (minioadmin/minioadmin)
+
+### Kubernetes
+
+Aplicar los manifiestos:
+
+```bash
+kubectl apply -f k8s-postgres.yaml
+kubectl apply -f k8s-auth-service.yaml
+kubectl apply -f k8s-user-service.yaml
+kubectl apply -f k8s-minio.yaml
+kubectl apply -f k8s-file-service.yaml
+kubectl apply -f k8s-kong.yaml
+```
+
+### Pruebas del File Service
+
+```bash
+# Subir archivo
+curl -X POST http://localhost:8005/upload -F "file=@archivo.txt"
+
+# Descargar archivo
+curl -o archivo.descargado.txt http://localhost:8005/download/archivo.txt
+
+# Eliminar archivo
+curl -X DELETE http://localhost:8005/files/archivo.txt
 ```
 
 El monolito contiene todos los módulos:

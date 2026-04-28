@@ -1,0 +1,51 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: monolith
+    url: http://monolith:8000
+    routes:
+      - name: monolith-route
+        paths:
+          - /monolith
+        strip_path: true
+
+  - name: auth-service
+    url: http://auth_service:8001
+    routes:
+      - name: auth-route
+        paths:
+          - /auth
+        strip_path: true
+
+  - name: user-service
+    url: http://user_service:8002
+    routes:
+      - name: user-route
+        paths:
+          - /users
+        strip_path: true
+
+  - name: group-service
+    url: http://group_service:8003
+    routes:
+      - name: group-route
+        paths:
+          - /groups
+        strip_path: true
+
+  - name: messaging-service
+    url: http://messaging_service:8004
+    routes:
+      - name: messaging-route
+        paths:
+          - /messages
+        strip_path: true
+
+  - name: file-service
+    url: http://file_service:8005
+    routes:
+      - name: file-route
+        paths:
+          - /files
+        strip_path: true
