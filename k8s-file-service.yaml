@@ -24,9 +24,15 @@ spec:
         - name: MINIO_ENDPOINT
           value: "minio:9000"
         - name: MINIO_ACCESS_KEY
-          value: "minioadmin"
+          valueFrom:
+            secretKeyRef:
+              name: minio-secret
+              key: access-key
         - name: MINIO_SECRET_KEY
-          value: "minioadmin"
+          valueFrom:
+            secretKeyRef:
+              name: minio-secret
+              key: secret-key
         - name: MINIO_BUCKET
           value: "files"
         resources:

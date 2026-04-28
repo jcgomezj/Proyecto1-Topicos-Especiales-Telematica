@@ -23,9 +23,15 @@ spec:
         - containerPort: 50051
         env:
         - name: DATABASE_URL
-          value: "postgresql://postgres:password@postgres:5432/groupsapp"
+          valueFrom:
+            secretKeyRef:
+              name: auth-secret
+              key: db-url
         - name: SECRET_KEY
-          value: "supersecretkey123"
+          valueFrom:
+            secretKeyRef:
+              name: auth-secret
+              key: secret-key
         - name: ALGORITHM
           value: "HS256"
         - name: ACCESS_TOKEN_EXPIRE_MINUTES

@@ -22,12 +22,15 @@ spec:
           value: "postgres"
         - name: KONG_PG_HOST
           value: "kong-database"
-        - name: KONG_PG_PASSWORD
-          value: "kong"
         - name: KONG_PG_USER
           value: "kong"
         - name: KONG_PG_DB
           value: "kong"
+        - name: KONG_PG_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kong-db-secret
+              key: password
         - name: KONG_PROXY_ACCESS_LOG
           value: "/dev/stdout"
         - name: KONG_ADMIN_ACCESS_LOG
@@ -87,6 +90,17 @@ spec:
     port: 5432
     targetPort: 5432
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kong-db-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -112,7 +126,10 @@ spec:
         - name: POSTGRES_DB
           value: "kong"
         - name: POSTGRES_PASSWORD
-          value: "kong"
+          valueFrom:
+            secretKeyRef:
+              name: kong-db-secret
+              key: password
         volumeMounts:
         - name: kong-data
           mountPath: /var/lib/postgresql/data
@@ -125,4 +142,5 @@ spec:
             cpu: "100m"
       volumes:
       - name: kong-data
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: kong-db-pvc
