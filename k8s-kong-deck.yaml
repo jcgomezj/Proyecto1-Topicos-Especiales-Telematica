@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kong-config
+data:
+  kong.yaml: |
+    _format_version: "3.0"
+    _transform: true
+    services:
+      - name: monolith
+        url: http://monolith:8000
+        routes:
+          - name: monolith-route
+            paths:
+              - /monolith
+            strip_path: true
+      - name: auth-service
+        url: http://auth-service:8001
+        routes:
+          - name: auth-route
+            paths:
+              - /auth
+            strip_path: true
+      - name: user-service
+        url: http://user-service:8002
+        routes:
+          - name: user-route
+            paths:
+              - /users
+            strip_path: true
+      - name: group-service
+        url: http://group-service:8003
+        routes:
+          - name: group-route
+            paths:
+              - /groups
+            strip_path: true
+      - name: messaging-service
+        url: http://messaging-service:8004
+        routes:
+          - name: messaging-route
+            paths:
+              - /messages
+            strip_path: true
+      - name: file-service
+        url: http://file-service:8005
+        routes:
+          - name: file-route
+            paths:
+              - /files
+            strip_path: true
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kong-deck-sync
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: wait-for-kong
+        image: busybox
+        command: ['sh', '-c', 'until wget -qO- http://kong:8001/status; do echo waiting for kong admin api; sleep 5; done']
+      containers:
+      - name: deck
+        image: kong/deck:latest
+        args:
+          - sync
+          - --kong-addr
+          - http://kong:8001
+          - --state
+          - /config/kong.yaml
+        volumeMounts:
+        - name: kong-config
+          mountPath: /config
+      restartPolicy: OnFailure
+      volumes:
+      - name: kong-config
+        configMap:
+          name: kong-config

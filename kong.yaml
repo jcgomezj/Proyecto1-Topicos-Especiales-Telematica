@@ -11,7 +11,7 @@ services:
         strip_path: true
 
   - name: auth-service
-    url: http://auth_service:8001
+    url: http://auth-service:8001
     routes:
       - name: auth-route
         paths:
@@ -19,7 +19,7 @@ services:
         strip_path: true
 
   - name: user-service
-    url: http://user_service:8002
+    url: http://user-service:8002
     routes:
       - name: user-route
         paths:
@@ -27,7 +27,7 @@ services:
         strip_path: true
 
   - name: group-service
-    url: http://group_service:8003
+    url: http://group-service:8003
     routes:
       - name: group-route
         paths:
@@ -35,7 +35,7 @@ services:
         strip_path: true
 
   - name: messaging-service
-    url: http://messaging_service:8004
+    url: http://messaging-service:8004
     routes:
       - name: messaging-route
         paths:
@@ -43,7 +43,7 @@ services:
         strip_path: true
 
   - name: file-service
-    url: http://file_service:8005
+    url: http://file-service:8005
     routes:
       - name: file-route
         paths:
